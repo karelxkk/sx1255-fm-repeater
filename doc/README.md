@@ -4,6 +4,17 @@ Direct-I/O SX1255 repeater integration for SvxLink.
 
 This directory is intended to be a standalone git repository.
 
+## Installation Order
+
+Install the hardware support first, then the repeater package:
+
+1. Install the Raspberry Pi Zero 2 kernel package:
+   `rpi-zero2-kernel-6.18.36-myzero2+.deb`
+2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
+3. Reboot and verify that ALSA sees the `GenericStereoAu` audio device.
+4. Install `sx1255-fm-repeater_0.1.0_arm64.deb`.
+5. Configure SvxLink/repeater values when the package asks through `dialog`.
+
 Runtime dependencies:
 
 - `svxlink-server`
@@ -75,13 +86,13 @@ The release provides two hardware support files for Raspberry Pi Zero 2:
 - `rpi-zero2-kernel-6.18.36-myzero2+.deb`
 - `genericstereoaudiocodec.dtbo`
 
-Install the kernel package first:
+Step 1: install the kernel package first:
 
 ```sh
 sudo apt install ./rpi-zero2-kernel-6.18.36-myzero2+.deb
 ```
 
-Install the device-tree overlay:
+Step 2: install the device-tree overlay:
 
 ```sh
 sudo install -m 0644 genericstereoaudiocodec.dtbo /boot/firmware/overlays/genericstereoaudiocodec.dtbo
@@ -97,7 +108,7 @@ dtoverlay=genericstereoaudiocodec
 On older Raspberry Pi OS images the config file may be `/boot/config.txt`
 instead of `/boot/firmware/config.txt`.
 
-Reboot and verify that ALSA sees the SX1255 audio device:
+Step 3: reboot and verify that ALSA sees the SX1255 audio device:
 
 ```sh
 sudo reboot
@@ -114,6 +125,12 @@ CAPTURE_DEV=hw:GenericStereoAu,1,0
 
 If ALSA assigns a different card name or index, override these values in
 `/etc/default/sx1255-repeater`.
+
+Step 4: install the repeater package only after the kernel and overlay are active:
+
+```sh
+sudo apt install ./sx1255-fm-repeater_0.1.0_arm64.deb
+```
 
 Git/source notes:
 
