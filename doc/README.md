@@ -59,6 +59,14 @@ sudo systemctl restart svxlink.service
 
 The `svxlink` user must have permissions for `/dev/spidev0.0` and ALSA devices.
 
+The Debian package asks for SvxLink callsigns, reflector address, and `AUTH_KEY`
+with `dialog` on first install if the configuration still contains placeholders.
+Run this to repeat the question flow:
+
+```sh
+sudo dpkg-reconfigure sx1255-fm-repeater
+```
+
 Git/source notes:
 
 - Commit `configure`, `Makefile.in`, `config.mk.in`, `src/`, `scripts/`, `systemd/`, `config/`, `debian/`, and `doc/`.

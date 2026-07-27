@@ -156,6 +156,7 @@ if [ "${bindir_set}" -eq 0 ]; then
     bindir=$prefix/bin
 fi
 docdir=$prefix/share/doc/$package_name
+datadir=$prefix/share/$package_name
 
 if [ -z "$deb_arch" ]; then
     if command -v dpkg >/dev/null 2>&1; then
@@ -185,6 +186,7 @@ render() {
         -e "s/@MODPROBEDIR@/$(esc "$modprobedir")/g" \
         -e "s/@MODULESLOADDIR@/$(esc "$modulesloaddir")/g" \
         -e "s/@DOCDIR@/$(esc "$docdir")/g" \
+        -e "s/@DATADIR@/$(esc "$datadir")/g" \
         -e "s/@RUN_USER@/$(esc "$run_user")/g" \
         -e "s/@RUN_GROUP@/$(esc "$run_group")/g" \
         -e "s/@PYTHON@/$(esc "$python")/g" \

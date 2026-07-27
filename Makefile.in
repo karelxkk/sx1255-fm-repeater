@@ -39,6 +39,8 @@ install: all
 	install -m 0644 config/sx1255-repeater.default "$(DESTDIR)$(DEFAULTDIR)/sx1255-repeater"
 	install -d "$(DESTDIR)$(SVXLINKCONFDIR)"
 	install -m 0644 "$(BUILD_DIR)/config/svxlink.conf" "$(DESTDIR)$(SVXLINKCONFDIR)/svxlink.conf"
+	install -d "$(DESTDIR)$(DATADIR)"
+	install -m 0644 config/svxlink.conf.in "$(DESTDIR)$(DATADIR)/svxlink.conf.in"
 	install -d "$(DESTDIR)$(MODPROBEDIR)"
 	install -m 0644 config/snd-aloop.modprobe.conf "$(DESTDIR)$(MODPROBEDIR)/snd-aloop.conf"
 	install -d "$(DESTDIR)$(MODULESLOADDIR)"
