@@ -98,9 +98,10 @@ Step 2: install the device-tree overlay:
 sudo install -m 0644 genericstereoaudiocodec.dtbo /boot/firmware/overlays/genericstereoaudiocodec.dtbo
 ```
 
-Enable I2S and the overlay in `/boot/firmware/config.txt`:
+Enable SPI, I2S, and the overlay in `/boot/firmware/config.txt`:
 
 ```ini
+dtparam=spi=on
 dtparam=i2s=on
 dtoverlay=genericstereoaudiocodec
 ```
