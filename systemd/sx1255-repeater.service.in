@@ -12,6 +12,9 @@ WorkingDirectory=@LOCALSTATEDIR@/lib/svxlink
 
 EnvironmentFile=-@DEFAULTDIR@/sx1255-repeater
 
+ExecStartPre=@SPIBINDIR@/sx1255-spi 430950020 438575000
+#ExecStartPre=@SPIBINDIR@/sx1255-spi 430975020 438575000
+ExecStartPre=@SPIBINDIR@/sx1255-spi-fixed -l 30 -a 75 -b 75 -R 0 -T 0
 ExecStart=@BINDIR@/sx1255_repeater
 
 Restart=on-failure

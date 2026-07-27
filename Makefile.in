@@ -7,11 +7,19 @@ DEB_FILE := $(DEB_DIR)/$(PACKAGE_NAME)_$(VERSION)_$(DEB_ARCH).deb
 
 .PHONY: all clean install uninstall deb distclean services configs
 
-all: $(BUILD_DIR)/sx1255_repeater services configs
+all: $(BUILD_DIR)/sx1255_repeater $(BUILD_DIR)/sx1255-spi $(BUILD_DIR)/sx1255-spi-fixed services configs
 
 $(BUILD_DIR)/sx1255_repeater: src/sx1255_repeater.c config.mk
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ src/sx1255_repeater.c $(LDLIBS)
+
+$(BUILD_DIR)/sx1255-spi: src/sx1255-spi.c config.mk
+	@mkdir -p $(BUILD_DIR)
+	$(CC) -D_DEFAULT_SOURCE $(CFLAGS) $(LDFLAGS) -o $@ src/sx1255-spi.c -lm
+
+$(BUILD_DIR)/sx1255-spi-fixed: src/sx1255-spi-fixed.c config.mk
+	@mkdir -p $(BUILD_DIR)
+	$(CC) -D_DEFAULT_SOURCE $(CFLAGS) $(LDFLAGS) -o $@ src/sx1255-spi-fixed.c -lgpiod -lm
 
 services: $(BUILD_DIR)/systemd/sx1255-repeater.service $(BUILD_DIR)/systemd/svx-ptt-bridge.service
 
@@ -32,6 +40,9 @@ install: all
 	install -d "$(DESTDIR)$(BINDIR)"
 	install -m 0755 "$(BUILD_DIR)/sx1255_repeater" "$(DESTDIR)$(BINDIR)/sx1255_repeater"
 	install -m 0755 scripts/svx_sx1255_ptt_bridge.py "$(DESTDIR)$(BINDIR)/svx_sx1255_ptt_bridge.py"
+	install -d "$(DESTDIR)$(SPIBINDIR)"
+	install -m 0755 "$(BUILD_DIR)/sx1255-spi" "$(DESTDIR)$(SPIBINDIR)/sx1255-spi"
+	install -m 0755 "$(BUILD_DIR)/sx1255-spi-fixed" "$(DESTDIR)$(SPIBINDIR)/sx1255-spi-fixed"
 	install -d "$(DESTDIR)$(SYSTEMDUNITDIR)"
 	install -m 0644 "$(BUILD_DIR)/systemd/sx1255-repeater.service" "$(DESTDIR)$(SYSTEMDUNITDIR)/sx1255-repeater.service"
 	install -m 0644 "$(BUILD_DIR)/systemd/svx-ptt-bridge.service" "$(DESTDIR)$(SYSTEMDUNITDIR)/svx-ptt-bridge.service"
@@ -52,6 +63,8 @@ install: all
 uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/sx1255_repeater"
 	rm -f "$(DESTDIR)$(BINDIR)/svx_sx1255_ptt_bridge.py"
+	rm -f "$(DESTDIR)$(SPIBINDIR)/sx1255-spi"
+	rm -f "$(DESTDIR)$(SPIBINDIR)/sx1255-spi-fixed"
 	rm -f "$(DESTDIR)$(SYSTEMDUNITDIR)/sx1255-repeater.service"
 	rm -f "$(DESTDIR)$(SYSTEMDUNITDIR)/svx-ptt-bridge.service"
 	rm -f "$(DESTDIR)$(DEFAULTDIR)/sx1255-repeater"
@@ -72,7 +85,7 @@ deb: all
 	@echo "Created $(DEB_FILE)"
 
 clean:
-	rm -f "$(BUILD_DIR)/sx1255_repeater"
+	rm -f "$(BUILD_DIR)/sx1255_repeater" "$(BUILD_DIR)/sx1255-spi" "$(BUILD_DIR)/sx1255-spi-fixed"
 
 distclean:
 	rm -rf "$(BUILD_DIR)" Makefile config.mk

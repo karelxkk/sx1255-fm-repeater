@@ -4,6 +4,7 @@ set -eu
 package_name=sx1255-fm-repeater
 version=0.1.0
 prefix=/usr
+spibindir=/usr/local/bin
 sysconfdir=/etc
 localstatedir=/var
 systemdunitdir=/lib/systemd/system
@@ -32,6 +33,7 @@ Usage: ./configure [OPTIONS]
 Options:
   --prefix=DIR              Install prefix, default /usr
   --bindir=DIR              Program directory, default PREFIX/bin
+  --spibindir=DIR           SX1255 SPI helper directory, default /usr/local/bin
   --sysconfdir=DIR          Configuration root, default /etc
   --localstatedir=DIR       State root, default /var
   --systemdunitdir=DIR      systemd unit directory, default /lib/systemd/system
@@ -116,6 +118,7 @@ for arg in "$@"; do
         --help|-h) show_help; exit 0 ;;
         --prefix=*) prefix=${arg#*=} ;;
         --bindir=*) bindir=${arg#*=}; bindir_set=1 ;;
+        --spibindir=*) spibindir=${arg#*=} ;;
         --sysconfdir=*) sysconfdir=${arg#*=} ;;
         --localstatedir=*) localstatedir=${arg#*=} ;;
         --systemdunitdir=*) systemdunitdir=${arg#*=} ;;
@@ -178,6 +181,7 @@ render() {
         -e "s/@VERSION@/$(esc "$version")/g" \
         -e "s/@PREFIX@/$(esc "$prefix")/g" \
         -e "s/@BINDIR@/$(esc "$bindir")/g" \
+        -e "s/@SPIBINDIR@/$(esc "$spibindir")/g" \
         -e "s/@SYSCONFDIR@/$(esc "$sysconfdir")/g" \
         -e "s/@LOCALSTATEDIR@/$(esc "$localstatedir")/g" \
         -e "s/@SYSTEMDUNITDIR@/$(esc "$systemdunitdir")/g" \
@@ -216,6 +220,7 @@ cat <<EOF
 Configured $package_name $version
   prefix:          $prefix
   bindir:          $bindir
+  spibindir:       $spibindir
   sysconfdir:      $sysconfdir
   systemdunitdir:  $systemdunitdir
   run user/group:  $run_user:$run_group
