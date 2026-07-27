@@ -70,7 +70,7 @@ Enable services after reviewing `/etc/default/sx1255-repeater` and `/etc/svxlink
 ```sh
 sudo systemctl enable --now sx1255-repeater.service
 sudo systemctl enable --now svx-ptt-bridge.service
-sudo systemctl restart svxlink.service
+sudo systemctl enable --now svxlink
 ```
 
 The package adds the `svxlink` user to the `audio`, `spi`, and `gpio` groups
@@ -173,6 +173,14 @@ dependency:
 
 ```sh
 sudo apt install ./sx1255-fm-repeater_0.1.5_arm64.deb
+```
+
+Enable the repeater, PTT bridge, and SvxLink services:
+
+```sh
+sudo systemctl enable --now sx1255-repeater.service
+sudo systemctl enable --now svx-ptt-bridge.service
+sudo systemctl enable --now svxlink
 ```
 
 ## SX1255 Frequencies
