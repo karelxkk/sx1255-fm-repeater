@@ -4,7 +4,7 @@ Section: hamradio
 Priority: optional
 Architecture: @DEB_ARCH@
 Maintainer: SX1255 FM Repeater Maintainers <root@localhost>
-Depends: libc6, libasound2, libgpiod2, python3, svxlink-server, systemd, dialog
+Depends: libc6, libasound2, libgpiod3, python3, svxlink-server, systemd, dialog
 Description: SX1255 direct-I/O repeater integration for SvxLink
  Installs the SX1255 repeater binary, SvxLink PTT bridge, systemd units,
  snd-aloop setup, and SvxLink configuration for the direct-I/O repeater.

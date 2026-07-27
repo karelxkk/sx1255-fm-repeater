@@ -19,7 +19,7 @@ $(BUILD_DIR)/sx1255-spi: src/sx1255-spi.c config.mk
 
 $(BUILD_DIR)/sx1255-spi-fixed: src/sx1255-spi-fixed.c config.mk
 	@mkdir -p $(BUILD_DIR)
-	$(CC) -D_DEFAULT_SOURCE $(CFLAGS) $(LDFLAGS) -o $@ src/sx1255-spi-fixed.c -lgpiod -lm
+	$(CC) -D_DEFAULT_SOURCE $(CFLAGS) $(LDFLAGS) -o $@ src/sx1255-spi-fixed.c -ldl -lm
 
 services: $(BUILD_DIR)/systemd/sx1255-repeater.service $(BUILD_DIR)/systemd/svx-ptt-bridge.service
 

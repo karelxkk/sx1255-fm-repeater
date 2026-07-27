@@ -7,12 +7,12 @@
 #include <fcntl.h>
 #include <math.h>
 #include <errno.h>
+#include <dlfcn.h>
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
-#include <gpiod.h>
 #include <getopt.h>
 
-// Build with gcc sx1255-spi-fixed.c -o sx1255-spi-fixed -lgpiod -lm
+// Build with gcc sx1255-spi-fixed.c -o sx1255-spi-fixed -ldl -lm
 static int spi_fd = -1;
 
 // --- Configuration ---
@@ -23,8 +23,89 @@ const char *spi_device = "/dev/spidev0.0";
 const char *gpio_chip_path = "/dev/gpiochip0";
 
 // --- Global libgpiod handles ---
-struct gpiod_chip *gpio_chip;
-struct gpiod_line *rst_line;
+struct gpiod_chip;
+struct gpiod_line_settings;
+struct gpiod_line_config;
+struct gpiod_request_config;
+struct gpiod_line_request;
+
+enum gpiod_line_direction {
+    GPIOD_LINE_DIRECTION_AS_IS = 1,
+    GPIOD_LINE_DIRECTION_INPUT = 2,
+    GPIOD_LINE_DIRECTION_OUTPUT = 3
+};
+
+enum gpiod_line_value {
+    GPIOD_LINE_VALUE_INACTIVE = 0,
+    GPIOD_LINE_VALUE_ACTIVE = 1
+};
+
+static void *gpiod_lib;
+static struct gpiod_chip *gpio_chip;
+static struct gpiod_line_request *rst_line_request;
+
+static struct gpiod_chip *(*p_gpiod_chip_open)(const char *path);
+static void (*p_gpiod_chip_close)(struct gpiod_chip *chip);
+static struct gpiod_line_settings *(*p_gpiod_line_settings_new)(void);
+static void (*p_gpiod_line_settings_free)(struct gpiod_line_settings *settings);
+static void (*p_gpiod_line_settings_set_direction)(struct gpiod_line_settings *settings,
+                                                   enum gpiod_line_direction direction);
+static void (*p_gpiod_line_settings_set_output_value)(struct gpiod_line_settings *settings,
+                                                      enum gpiod_line_value value);
+static struct gpiod_line_config *(*p_gpiod_line_config_new)(void);
+static void (*p_gpiod_line_config_free)(struct gpiod_line_config *config);
+static int (*p_gpiod_line_config_add_line_settings)(struct gpiod_line_config *config,
+                                                    const unsigned int *offsets,
+                                                    size_t num_offsets,
+                                                    struct gpiod_line_settings *settings);
+static struct gpiod_request_config *(*p_gpiod_request_config_new)(void);
+static void (*p_gpiod_request_config_free)(struct gpiod_request_config *config);
+static void (*p_gpiod_request_config_set_consumer)(struct gpiod_request_config *config,
+                                                   const char *consumer);
+static struct gpiod_line_request *(*p_gpiod_chip_request_lines)(struct gpiod_chip *chip,
+                                                                struct gpiod_request_config *req_cfg,
+                                                                struct gpiod_line_config *line_cfg);
+static void (*p_gpiod_line_request_release)(struct gpiod_line_request *request);
+static int (*p_gpiod_line_request_set_values)(struct gpiod_line_request *request,
+                                              const enum gpiod_line_value *values);
+
+static int load_gpiod3(void)
+{
+    if (gpiod_lib) return 0;
+
+    gpiod_lib = dlopen("libgpiod.so.3", RTLD_NOW);
+    if (!gpiod_lib) {
+        fprintf(stderr, "Error loading libgpiod.so.3: %s\n", dlerror());
+        return -1;
+    }
+
+#define LOAD_SYM(name) do { \
+    p_##name = dlsym(gpiod_lib, #name); \
+    if (!p_##name) { \
+        fprintf(stderr, "Error loading libgpiod symbol %s: %s\n", #name, dlerror()); \
+        return -1; \
+    } \
+} while (0)
+
+    LOAD_SYM(gpiod_chip_open);
+    LOAD_SYM(gpiod_chip_close);
+    LOAD_SYM(gpiod_line_settings_new);
+    LOAD_SYM(gpiod_line_settings_free);
+    LOAD_SYM(gpiod_line_settings_set_direction);
+    LOAD_SYM(gpiod_line_settings_set_output_value);
+    LOAD_SYM(gpiod_line_config_new);
+    LOAD_SYM(gpiod_line_config_free);
+    LOAD_SYM(gpiod_line_config_add_line_settings);
+    LOAD_SYM(gpiod_request_config_new);
+    LOAD_SYM(gpiod_request_config_free);
+    LOAD_SYM(gpiod_request_config_set_consumer);
+    LOAD_SYM(gpiod_chip_request_lines);
+    LOAD_SYM(gpiod_line_request_release);
+    LOAD_SYM(gpiod_line_request_set_values);
+#undef LOAD_SYM
+
+    return 0;
+}
 
 // --- Unchanged SPI and SX1255 Functions (Omitted for brevity) ---
 uint8_t bits = 8;
@@ -188,28 +269,72 @@ int8_t sx1255_setrate(rate_t r)
 
 int gpio_init(void)
 {
+    if (load_gpiod3() != 0) {
+        return -1;
+    }
+
     // Open the GPIO chip
-    gpio_chip = gpiod_chip_open(gpio_chip_path);
+    gpio_chip = p_gpiod_chip_open(gpio_chip_path);
     if (!gpio_chip)
     {
         fprintf(stderr, "Error opening GPIO chip '%s': %s\n", gpio_chip_path, strerror(errno));
         return -1;
     }
 
-    rst_line = gpiod_chip_get_line(gpio_chip, RST_PIN_OFFSET);
-    if (!rst_line)
+    struct gpiod_line_settings *settings = p_gpiod_line_settings_new();
+    if (!settings)
     {
-        fprintf(stderr, "Error getting GPIO line for pin %d: %s\n", RST_PIN_OFFSET, strerror(errno));
-        gpiod_chip_close(gpio_chip);
+        perror("Error creating GPIO line settings");
+        p_gpiod_chip_close(gpio_chip);
+        gpio_chip = NULL;
+        return -1;
+    }
+    p_gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
+    p_gpiod_line_settings_set_output_value(settings, GPIOD_LINE_VALUE_INACTIVE);
+
+    struct gpiod_line_config *line_cfg = p_gpiod_line_config_new();
+    if (!line_cfg)
+    {
+        perror("Error creating GPIO line config");
+        p_gpiod_line_settings_free(settings);
+        p_gpiod_chip_close(gpio_chip);
         gpio_chip = NULL;
         return -1;
     }
 
-    if (gpiod_line_request_output(rst_line, "sx1255-reset", 0) < 0)
+    unsigned int offsets[] = {RST_PIN_OFFSET};
+    if (p_gpiod_line_config_add_line_settings(line_cfg, offsets, 1, settings) != 0)
+    {
+        fprintf(stderr, "Error adding GPIO settings for pin %d: %s\n", RST_PIN_OFFSET, strerror(errno));
+        p_gpiod_line_config_free(line_cfg);
+        p_gpiod_line_settings_free(settings);
+        p_gpiod_chip_close(gpio_chip);
+        gpio_chip = NULL;
+        return -1;
+    }
+
+    struct gpiod_request_config *req_cfg = p_gpiod_request_config_new();
+    if (!req_cfg)
+    {
+        perror("Error creating GPIO request config");
+        p_gpiod_line_config_free(line_cfg);
+        p_gpiod_line_settings_free(settings);
+        p_gpiod_chip_close(gpio_chip);
+        gpio_chip = NULL;
+        return -1;
+    }
+    p_gpiod_request_config_set_consumer(req_cfg, "sx1255-reset");
+
+    rst_line_request = p_gpiod_chip_request_lines(gpio_chip, req_cfg, line_cfg);
+
+    p_gpiod_request_config_free(req_cfg);
+    p_gpiod_line_config_free(line_cfg);
+    p_gpiod_line_settings_free(settings);
+
+    if (!rst_line_request)
     {
         fprintf(stderr, "Error requesting GPIO line for pin %d: %s\n", RST_PIN_OFFSET, strerror(errno));
-        gpiod_chip_close(gpio_chip);
-        rst_line = NULL;
+        p_gpiod_chip_close(gpio_chip);
         gpio_chip = NULL;
         return -1;
     }
@@ -218,7 +343,10 @@ int gpio_init(void)
 
 int rst(uint8_t state)
 {
-    if (gpiod_line_set_value(rst_line, state ? 1 : 0) < 0)
+    enum gpiod_line_value values[] = {
+        state ? GPIOD_LINE_VALUE_ACTIVE : GPIOD_LINE_VALUE_INACTIVE
+    };
+    if (p_gpiod_line_request_set_values(rst_line_request, values) < 0)
     {
         fprintf(stderr, "Error setting GPIO line value for pin %d to state %d: %s\n",
                 RST_PIN_OFFSET, state, strerror(errno));
@@ -229,15 +357,20 @@ int rst(uint8_t state)
 
 void gpio_cleanup(void)
 {
-    if (rst_line)
+    if (rst_line_request)
     {
-        gpiod_line_release(rst_line);
-        rst_line = NULL;
+        p_gpiod_line_request_release(rst_line_request);
+        rst_line_request = NULL;
     }
     if (gpio_chip)
     {
-        gpiod_chip_close(gpio_chip);
+        p_gpiod_chip_close(gpio_chip);
         gpio_chip = NULL;
+    }
+    if (gpiod_lib)
+    {
+        dlclose(gpiod_lib);
+        gpiod_lib = NULL;
     }
 }
 
