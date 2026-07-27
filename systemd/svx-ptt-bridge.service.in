@@ -1,12 +1,15 @@
 [Unit]
 Description=SVXLink PTT bridge for SX1255 RX/DUP control
-After=sx1255-repeater.service svxlink.service
-Requires=sx1255-repeater.service svxlink.service
+After=sx1255-repeater.service
+Before=svxlink.service
+Requires=sx1255-repeater.service
 
 [Service]
 Type=simple
 User=@RUN_USER@
 Group=@RUN_GROUP@
+RuntimeDirectory=svxlink
+RuntimeDirectoryMode=0755
 Environment="PYTHONUNBUFFERED=1"
 Environment="SVX_PTY=/run/svxlink/ptt"
 Environment="SX_HOST=127.0.0.1"

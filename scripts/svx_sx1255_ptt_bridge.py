@@ -2,6 +2,7 @@
 """Bridge SvxLink PTY PTT commands to the SX1255 TCP control port."""
 
 import os
+import pty
 import socket
 import time
 
@@ -28,17 +29,28 @@ def run() -> None:
         flush=True,
     )
 
-    pty = None
+    pty_file = None
+    master_fd = None
     while True:
         try:
-            if pty is None:
-                pty = open(PTY_PATH, "rb", buffering=0)
-                print(f"PTY opened: {PTY_PATH}", flush=True)
+            if pty_file is None:
+                os.makedirs(os.path.dirname(PTY_PATH), exist_ok=True)
+                master_fd, slave_fd = pty.openpty()
+                slave_name = os.ttyname(slave_fd)
+                os.close(slave_fd)
+                try:
+                    os.unlink(PTY_PATH)
+                except FileNotFoundError:
+                    pass
+                os.symlink(slave_name, PTY_PATH)
+                pty_file = os.fdopen(master_fd, "rb", buffering=0)
+                master_fd = None
+                print(f"PTY created: {PTY_PATH} -> {slave_name}", flush=True)
 
-            command = pty.read(1)
+            command = pty_file.read(1)
             if not command:
-                pty.close()
-                pty = None
+                pty_file.close()
+                pty_file = None
                 time.sleep(0.2)
             elif command == b"T":
                 set_radio_mode("DUP")
@@ -48,9 +60,12 @@ def run() -> None:
                 print("PTT OFF -> RX", flush=True)
         except (FileNotFoundError, OSError, RuntimeError) as error:
             print(f"Bridge error: {error}", flush=True)
-            if pty is not None:
-                pty.close()
-                pty = None
+            if pty_file is not None:
+                pty_file.close()
+                pty_file = None
+            elif master_fd is not None:
+                os.close(master_fd)
+                master_fd = None
             time.sleep(0.5)
 
 

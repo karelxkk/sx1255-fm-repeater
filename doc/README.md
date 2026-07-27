@@ -12,7 +12,7 @@ Install the hardware support first, then the repeater package:
    `rpi-zero2-kernel-6.18.36-myzero2+.deb`
 2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
 3. Reboot and verify that ALSA sees the `GenericStereoAu` audio device.
-4. Install `sx1255-fm-repeater_0.1.2_arm64.deb`.
+4. Install `sx1255-fm-repeater_0.1.3_arm64.deb`.
 5. Configure SvxLink/repeater values when the package asks through `dialog`.
 
 Runtime dependencies:
@@ -36,6 +36,8 @@ Installed components:
 - `svx_sx1255_ptt_bridge.py`: PTY bridge translating SvxLink PTT commands to repeater TCP commands.
 - `sx1255-repeater.service`: systemd unit for the repeater.
 - `svx-ptt-bridge.service`: systemd unit for the PTY bridge.
+- `svxlink.service.d/sx1255-fm-repeater.conf`: systemd ordering drop-in so
+  SvxLink starts after the PTY bridge.
 - `svxlink.conf.in`: SvxLink configuration template for loopback audio and PTY PTT.
 - `snd-aloop.conf`: module-load and modprobe configuration for two ALSA loopback cables.
 
@@ -137,7 +139,7 @@ active.  The `libgpiod3` runtime library is pulled automatically as a package
 dependency:
 
 ```sh
-sudo apt install ./sx1255-fm-repeater_0.1.2_arm64.deb
+sudo apt install ./sx1255-fm-repeater_0.1.3_arm64.deb
 ```
 
 Git/source notes:
