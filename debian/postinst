@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload || true
+fi
+
+if getent passwd svxlink >/dev/null 2>&1; then
+    chown -R svxlink:svxlink /var/lib/dio-sx1255-repeater 2>/dev/null || true
+fi
+
+if command -v modprobe >/dev/null 2>&1; then
+    modprobe snd-aloop 2>/dev/null || true
+fi
+
+cat <<EOF
+sx1255-fm-repeater installed.
+
+Review /etc/default/sx1255-repeater and /etc/svxlink/svxlink.conf, then run:
+  systemctl enable --now sx1255-repeater.service
+  systemctl enable --now svx-ptt-bridge.service
+  systemctl restart svxlink.service
+EOF
+
+exit 0

@@ -1,0 +1,27 @@
+[Unit]
+Description=SX1255 RX/TX repeater
+Documentation=file:@DOCDIR@/README.md
+After=local-fs.target sound.target network.target
+Wants=sound.target
+
+[Service]
+Type=simple
+User=@RUN_USER@
+Group=@RUN_GROUP@
+WorkingDirectory=@LOCALSTATEDIR@/lib/dio-sx1255-repeater
+
+EnvironmentFile=-@DEFAULTDIR@/sx1255-repeater
+
+ExecStart=@BINDIR@/sx1255_repeater
+
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=10s
+KillSignal=SIGTERM
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sx1255-repeater
+
+[Install]
+WantedBy=multi-user.target

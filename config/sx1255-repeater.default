@@ -1,0 +1,33 @@
+# Runtime defaults for sx1255-repeater.service.
+# Override locally without editing the systemd unit.
+
+START=RX
+HOST=127.0.0.1
+PORT=17020
+SECRET=mytoken
+
+# RF I/Q ALSA devices connected to the SX1255.
+PLAYBACK_DEV=hw:GenericStereoAu,0,0
+CAPTURE_DEV=hw:GenericStereoAu,1,0
+SR=125000
+CH=2
+PERIOD=4096
+BUF_PERIODS=16
+
+# snd-aloop wiring:
+#   SvxLink Tx1 playback -> Loopback,0,0 -> repeater TX capture Loopback,1,0
+#   repeater RX playback -> Loopback,0,1 -> SvxLink Rx1 capture Loopback,1,1
+AUDIO_IN_DEV=plughw:Loopback,1,0
+AUDIO_OUT_DEV=plughw:Loopback,0,1
+TX_AUDIO_SR=16000
+RX_AUDIO_SR=16000
+AUDIO_PERIOD=512
+
+SPI_DEV=/dev/spidev0.0
+SPI_SPEED_HZ=1000000
+
+RX_SHIFT_HZ=-25000
+RX_MAX_DEV_HZ=2500
+RX_DEEMPH_TAU=0.0001
+TX_GAIN=1.75
+TX_PREEMPH_TAU=0.000075

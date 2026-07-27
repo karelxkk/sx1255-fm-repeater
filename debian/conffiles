@@ -1,0 +1,4 @@
+/etc/default/sx1255-repeater
+/etc/svxlink/svxlink.conf
+/etc/modprobe.d/snd-aloop.conf
+/etc/modules-load.d/snd-aloop.conf

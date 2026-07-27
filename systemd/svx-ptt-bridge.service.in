@@ -1,0 +1,22 @@
+[Unit]
+Description=SVXLink PTT bridge for SX1255 RX/DUP control
+After=sx1255-repeater.service svxlink.service
+Requires=sx1255-repeater.service svxlink.service
+
+[Service]
+Type=simple
+User=@RUN_USER@
+Group=@RUN_GROUP@
+Environment="PYTHONUNBUFFERED=1"
+Environment="SVX_PTY=/run/svxlink/ptt"
+Environment="SX_HOST=127.0.0.1"
+Environment="SX_PORT=17020"
+Environment="SX_SECRET=mytoken"
+ExecStart=@PYTHON@ @BINDIR@/svx_sx1255_ptt_bridge.py
+Restart=always
+RestartSec=0.5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

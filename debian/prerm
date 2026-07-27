@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl stop svx-ptt-bridge.service sx1255-repeater.service 2>/dev/null || true
+        systemctl disable svx-ptt-bridge.service sx1255-repeater.service 2>/dev/null || true
+    fi
+fi
+
+exit 0
