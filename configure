@@ -2,7 +2,7 @@
 set -eu
 
 package_name=sx1255-fm-repeater
-version=0.1.0
+version=0.1.1
 prefix=/usr
 spibindir=/usr/local/bin
 sysconfdir=/etc
@@ -45,7 +45,7 @@ Options:
   --run-group=GROUP         systemd service group, default svxlink
   --python=PATH             Python interpreter, default /usr/bin/python3
   --package-name=NAME       Debian package name, default sx1255-fm-repeater
-  --version=VERSION         Package version, default 0.1.0
+  --version=VERSION         Package version, default 0.1.1
   --deb-arch=ARCH           Debian arch, default from dpkg or uname
   --repeater-callsign=CALL  SvxLink repeater logic callsign, default N0CALL-R
   --reflector-callsign=CALL SvxLink reflector logic callsign, default N0CALL-L
