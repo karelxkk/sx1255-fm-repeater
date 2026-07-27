@@ -10,7 +10,7 @@ Install the hardware support first, then the repeater package:
 
 1. Install the Raspberry Pi Zero 2 kernel package:
    `rpi-zero2-kernel-6.18.36-myzero2+.deb`
-2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
+2. Enable the bundled `genericstereoaudiocodec` device-tree overlay.
 3. Reboot and verify that ALSA sees the `GenericStereoAu` audio device.
 4. Install `sx1255-fm-repeater_0.1.5_arm64.deb`.
 5. Configure SvxLink/repeater values when the package asks through `dialog`.
@@ -88,10 +88,11 @@ sudo dpkg-reconfigure sx1255-fm-repeater
 
 ## Raspberry Pi Zero 2 Kernel And Overlay
 
-The release provides these support files for Raspberry Pi Zero 2:
+The release provides this hardware support package for Raspberry Pi Zero 2:
 
 - `rpi-zero2-kernel-6.18.36-myzero2+.deb`
-- `genericstereoaudiocodec.dtbo`
+
+The kernel package includes the `genericstereoaudiocodec.dtbo` overlay.
 
 Step 1: install the kernel package first:
 
@@ -99,13 +100,8 @@ Step 1: install the kernel package first:
 sudo apt install ./rpi-zero2-kernel-6.18.36-myzero2+.deb
 ```
 
-Step 2: install the device-tree overlay:
-
-```sh
-sudo install -m 0644 genericstereoaudiocodec.dtbo /boot/firmware/overlays/genericstereoaudiocodec.dtbo
-```
-
-Enable SPI, I2S, and the overlay in `/boot/firmware/config.txt`:
+Step 2: enable SPI, I2S, and the bundled overlay in
+`/boot/firmware/config.txt`:
 
 ```ini
 dtparam=spi=on
@@ -193,9 +189,9 @@ After reconnecting Wi-Fi, verify:
 iw dev wlan0 get power_save
 ```
 
-Step 4: install the repeater package only after the kernel and overlay are
-active.  The `libgpiod3` runtime library is pulled automatically as a package
-dependency:
+Step 4: install the repeater package only after the kernel and bundled overlay
+are active.  The `libgpiod3` runtime library is pulled automatically as a
+package dependency:
 
 ```sh
 sudo apt install ./sx1255-fm-repeater_0.1.5_arm64.deb
