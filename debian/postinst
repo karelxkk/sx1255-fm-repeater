@@ -107,6 +107,11 @@ fi
 
 if getent passwd svxlink >/dev/null 2>&1; then
     chown -R svxlink:svxlink /var/lib/svxlink 2>/dev/null || true
+    for group in audio spi gpio; do
+        if getent group "$group" >/dev/null 2>&1; then
+            usermod -a -G "$group" svxlink 2>/dev/null || true
+        fi
+    done
 fi
 
 if command -v modprobe >/dev/null 2>&1; then

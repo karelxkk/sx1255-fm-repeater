@@ -70,7 +70,9 @@ sudo systemctl enable --now svx-ptt-bridge.service
 sudo systemctl restart svxlink.service
 ```
 
-The `svxlink` user must have permissions for `/dev/spidev0.0` and ALSA devices.
+The package adds the `svxlink` user to the `audio`, `spi`, and `gpio` groups
+when those groups exist.  The `svxlink` user must have permissions for
+`/dev/spidev0.0`, `/dev/gpiochip0`, and ALSA devices.
 
 The Debian package asks for SvxLink callsigns, reflector address, and `AUTH_KEY`
 with `dialog` on first install if the configuration still contains placeholders.
