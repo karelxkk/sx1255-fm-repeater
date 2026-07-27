@@ -11,6 +11,7 @@ Runtime dependencies:
 - `python3`
 - `systemd`
 - Linux SPI and ALSA loopback support
+- Raspberry Pi kernel with the SX1255 I2S audio overlay
 
 Build/configuration helper:
 
@@ -66,6 +67,53 @@ Run this to repeat the question flow:
 ```sh
 sudo dpkg-reconfigure sx1255-fm-repeater
 ```
+
+## Raspberry Pi Zero 2 Kernel And Overlay
+
+The release provides two hardware support files for Raspberry Pi Zero 2:
+
+- `rpi-zero2-kernel-6.18.36-myzero2+.deb`
+- `genericstereoaudiocodec.dtbo`
+
+Install the kernel package first:
+
+```sh
+sudo apt install ./rpi-zero2-kernel-6.18.36-myzero2+.deb
+```
+
+Install the device-tree overlay:
+
+```sh
+sudo install -m 0644 genericstereoaudiocodec.dtbo /boot/firmware/overlays/genericstereoaudiocodec.dtbo
+```
+
+Enable I2S and the overlay in `/boot/firmware/config.txt`:
+
+```ini
+dtparam=i2s=on
+dtoverlay=genericstereoaudiocodec
+```
+
+On older Raspberry Pi OS images the config file may be `/boot/config.txt`
+instead of `/boot/firmware/config.txt`.
+
+Reboot and verify that ALSA sees the SX1255 audio device:
+
+```sh
+sudo reboot
+aplay -l
+arecord -l
+```
+
+The repeater defaults expect the card name used by this overlay:
+
+```sh
+PLAYBACK_DEV=hw:GenericStereoAu,0,0
+CAPTURE_DEV=hw:GenericStereoAu,1,0
+```
+
+If ALSA assigns a different card name or index, override these values in
+`/etc/default/sx1255-repeater`.
 
 Git/source notes:
 
