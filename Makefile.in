@@ -45,7 +45,7 @@ install: all
 	install -m 0644 config/snd-aloop.modprobe.conf "$(DESTDIR)$(MODPROBEDIR)/snd-aloop.conf"
 	install -d "$(DESTDIR)$(MODULESLOADDIR)"
 	install -m 0644 config/snd-aloop.modules-load.conf "$(DESTDIR)$(MODULESLOADDIR)/snd-aloop.conf"
-	install -d "$(DESTDIR)$(LOCALSTATEDIR)/lib/$(PACKAGE_NAME)"
+	install -d "$(DESTDIR)$(LOCALSTATEDIR)/lib/svxlink"
 	install -d "$(DESTDIR)$(DOCDIR)"
 	install -m 0644 doc/README.md "$(DESTDIR)$(DOCDIR)/README.md"
 

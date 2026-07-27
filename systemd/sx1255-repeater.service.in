@@ -8,7 +8,7 @@ Wants=sound.target
 Type=simple
 User=@RUN_USER@
 Group=@RUN_GROUP@
-WorkingDirectory=@LOCALSTATEDIR@/lib/dio-sx1255-repeater
+WorkingDirectory=@LOCALSTATEDIR@/lib/svxlink
 
 EnvironmentFile=-@DEFAULTDIR@/sx1255-repeater
 
