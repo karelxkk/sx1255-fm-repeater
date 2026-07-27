@@ -207,6 +207,10 @@ The TX startup frequency is:
 configured TX:   438575000 Hz
 ```
 
+Transmit audio must include CTCSS `88.5 Hz`.
+
+On my reflector setup, the expected SvxLink talk group is `123`.
+
 To change these values, edit the `ExecStartPre` line in
 `sx1255-repeater.service` and reload systemd:
 
