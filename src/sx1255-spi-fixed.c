@@ -22,6 +22,13 @@ static int spi_fd = -1;
 const char *spi_device = "/dev/spidev0.0";
 const char *gpio_chip_path = "/dev/gpiochip0";
 
+static void load_runtime_config(void)
+{
+    const char *env_spi_dev = getenv("SPI_DEV");
+    if (env_spi_dev && env_spi_dev[0] != '\0')
+        spi_device = env_spi_dev;
+}
+
 // --- Global libgpiod handles ---
 struct gpiod_chip;
 struct gpiod_line_settings;
@@ -139,7 +146,7 @@ int ret;
 
 fd = open(dev, O_RDWR);
 if (fd < 0) {
-    perror("Can't open SPI device");
+    fprintf(stderr, "Can't open SPI device '%s': %s\n", dev, strerror(errno));
     return fd;
 }
 
@@ -403,6 +410,7 @@ void print_help(const char *program_name)
 // --- Main Program Logic ---
 int main(int argc, char *argv[])
 {
+    load_runtime_config();
     mode = SPI_MODE_0;
 
     if (spi_init((char *)spi_device) == 0)

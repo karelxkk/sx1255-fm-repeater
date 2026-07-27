@@ -5,6 +5,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <math.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 
@@ -14,6 +15,13 @@ const char *device="/dev/spidev0.0";
 uint8_t mode;
 uint8_t bits=8;
 uint32_t speed=500000;
+
+static void load_runtime_config(void)
+{
+	const char *env_spi_dev = getenv("SPI_DEV");
+	if(env_spi_dev != NULL && env_spi_dev[0] != '\0')
+		device = env_spi_dev;
+}
 
 void gpio_init(void)
 {
@@ -87,46 +95,52 @@ int spi_init(char *dev)
 	fd = open(dev, O_RDWR);
 	if(fd<0)
 	{
-		printf("Can't open SPI device\n");
+		fprintf(stderr, "Can't open SPI device '%s': %s\n", dev, strerror(errno));
 		return fd;
 	}
 
 	ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
 	if(ret == -1)
 	{
-		printf("Can't open SPI device\n");
+		fprintf(stderr, "Can't set SPI mode on '%s': %s\n", dev, strerror(errno));
+		close(fd);
 		return -1;
 	}
 	ret = ioctl(fd, SPI_IOC_RD_MODE, &mode);
 	if(ret == -1)
 	{
-		printf("Can't open SPI device\n");
+		fprintf(stderr, "Can't read back SPI mode on '%s': %s\n", dev, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
 	ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
 	if(ret == -1)
 	{
-		printf("Can't set SPI device\n");
+		fprintf(stderr, "Can't set SPI bits per word on '%s': %s\n", dev, strerror(errno));
+		close(fd);
 		return -1;
 	}
 	ret = ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &bits);
 	if(ret == -1)
 	{
-		printf("Can't set SPI device\n");
+		fprintf(stderr, "Can't read back SPI bits per word on '%s': %s\n", dev, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
 	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
 	if(ret == -1)
 	{
-		printf("Can't set SPI device\n");
+		fprintf(stderr, "Can't set SPI max speed on '%s': %s\n", dev, strerror(errno));
+		close(fd);
 		return -1;
 	}
 	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
 	if(ret == -1)
 	{
-		printf("Can't set SPI device\n");
+		fprintf(stderr, "Can't read back SPI max speed on '%s': %s\n", dev, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
@@ -212,6 +226,8 @@ uint8_t sx1255_set_tx_freq(uint32_t freq)
 
 int main(int argc, char *argv[])
 {
+	load_runtime_config();
+
 	if(spi_init((char*)device)==0)
 		printf("SPI config OK\n");
 	else
