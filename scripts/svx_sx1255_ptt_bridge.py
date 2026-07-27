@@ -5,6 +5,7 @@ import os
 import pty
 import socket
 import time
+import errno
 
 
 PTY_PATH = os.getenv("SVX_PTY", "/run/svxlink/ptt")
@@ -59,6 +60,9 @@ def run() -> None:
                 set_radio_mode("RX")
                 print("PTT OFF -> RX", flush=True)
         except (FileNotFoundError, OSError, RuntimeError) as error:
+            if isinstance(error, OSError) and error.errno == errno.EIO and pty_file is not None:
+                time.sleep(0.2)
+                continue
             print(f"Bridge error: {error}", flush=True)
             if pty_file is not None:
                 pty_file.close()
