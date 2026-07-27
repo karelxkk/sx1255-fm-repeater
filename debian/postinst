@@ -60,6 +60,9 @@ write_svxlink_config() {
         -e "s/@REFLECTOR_HOSTS@/$(esc "$reflector_hosts")/g" \
         -e "s/@SVXLINK_AUTH_KEY@/$(esc "$auth_key")/g" \
         "$TEMPLATE" > "$tmp"
+    if [ -f "$CONFIG" ] && [ ! -f "$CONFIG.before-sx1255-fm-repeater" ]; then
+        cp -p "$CONFIG" "$CONFIG.before-sx1255-fm-repeater"
+    fi
     install -m 0644 "$tmp" "$CONFIG"
     rm -f "$tmp"
     touch "$CONFIG_MARK"
@@ -103,7 +106,7 @@ if command -v systemctl >/dev/null 2>&1; then
 fi
 
 if getent passwd svxlink >/dev/null 2>&1; then
-    chown -R svxlink:svxlink /var/lib/sx1255-fm-repeater 2>/dev/null || true
+    chown -R svxlink:svxlink /var/lib/svxlink 2>/dev/null || true
 fi
 
 if command -v modprobe >/dev/null 2>&1; then
@@ -126,6 +129,7 @@ cat <<EOF
 sx1255-fm-repeater installed.
 
 Review /etc/default/sx1255-repeater and /etc/svxlink/svxlink.conf, then run:
+  # Previous SvxLink config is kept as /etc/svxlink/svxlink.conf.before-sx1255-fm-repeater
   systemctl enable --now sx1255-repeater.service
   systemctl enable --now svx-ptt-bridge.service
   systemctl restart svxlink.service

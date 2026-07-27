@@ -36,7 +36,7 @@ Installed components:
 - `svx_sx1255_ptt_bridge.py`: PTY bridge translating SvxLink PTT commands to repeater TCP commands.
 - `sx1255-repeater.service`: systemd unit for the repeater.
 - `svx-ptt-bridge.service`: systemd unit for the PTY bridge.
-- `svxlink.conf`: SvxLink configuration for loopback audio and PTY PTT.
+- `svxlink.conf.in`: SvxLink configuration template for loopback audio and PTY PTT.
 - `snd-aloop.conf`: module-load and modprobe configuration for two ALSA loopback cables.
 
 Build and install from the source tree:
@@ -74,6 +74,8 @@ The `svxlink` user must have permissions for `/dev/spidev0.0` and ALSA devices.
 
 The Debian package asks for SvxLink callsigns, reflector address, and `AUTH_KEY`
 with `dialog` on first install if the configuration still contains placeholders.
+When it writes `/etc/svxlink/svxlink.conf`, the previous file is kept as
+`/etc/svxlink/svxlink.conf.before-sx1255-fm-repeater`.
 Run this to repeat the question flow:
 
 ```sh
