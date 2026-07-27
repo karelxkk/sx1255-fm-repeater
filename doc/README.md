@@ -134,39 +134,6 @@ CAPTURE_DEV=hw:GenericStereoAu,1,0
 If ALSA assigns a different card name or index, override these values in
 `/etc/default/sx1255-repeater`.
 
-## SX1255 Frequencies
-
-The default SX1255 startup frequencies are set in the systemd unit template:
-
-```ini
-ExecStartPre=+@SPIBINDIR@/sx1255-spi 430950020 438575000
-```
-
-The nominal RX channel is `430975020` Hz including the `20` Hz correction.  The
-SX1255 RX startup frequency is intentionally configured `25 kHz` lower, i.e.
-two 12.5 kHz channels below the wanted receive frequency:
-
-```text
-wanted RX:       430975020 Hz
-configured RX:   430950020 Hz
-offset:             -25000 Hz
-```
-
-The TX startup frequency is:
-
-```text
-configured TX:   438575000 Hz
-```
-
-To change these values, edit the `ExecStartPre` line in
-`sx1255-repeater.service` and reload systemd:
-
-```sh
-sudo systemctl edit --full sx1255-repeater.service
-sudo systemctl daemon-reload
-sudo systemctl restart sx1255-repeater.service
-```
-
 ## Disable Wi-Fi Power Save
 
 On Raspberry Pi OS Lite it is recommended to disable Wi-Fi power saving, since
@@ -199,6 +166,39 @@ dependency:
 
 ```sh
 sudo apt install ./sx1255-fm-repeater_0.1.5_arm64.deb
+```
+
+## SX1255 Frequencies
+
+The default SX1255 startup frequencies are set in the systemd unit template:
+
+```ini
+ExecStartPre=+@SPIBINDIR@/sx1255-spi 430950020 438575000
+```
+
+The nominal RX channel is `430975020` Hz including the `20` Hz correction.  The
+SX1255 RX startup frequency is intentionally configured `25 kHz` lower, i.e.
+two 12.5 kHz channels below the wanted receive frequency:
+
+```text
+wanted RX:       430975020 Hz
+configured RX:   430950020 Hz
+offset:             -25000 Hz
+```
+
+The TX startup frequency is:
+
+```text
+configured TX:   438575000 Hz
+```
+
+To change these values, edit the `ExecStartPre` line in
+`sx1255-repeater.service` and reload systemd:
+
+```sh
+sudo systemctl edit --full sx1255-repeater.service
+sudo systemctl daemon-reload
+sudo systemctl restart sx1255-repeater.service
 ```
 
 Git/source notes:
