@@ -12,14 +12,14 @@ Install the hardware support first, then the repeater package:
    `rpi-zero2-kernel-6.18.36-myzero2+.deb`
 2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
 3. Reboot and verify that ALSA sees the `GenericStereoAu` audio device.
-4. Install `libgpiod3` from the distribution repository.
-5. Install `sx1255-fm-repeater_0.1.0_arm64.deb`.
-6. Configure SvxLink/repeater values when the package asks through `dialog`.
+4. Install `sx1255-fm-repeater_0.1.0_arm64.deb`.
+5. Configure SvxLink/repeater values when the package asks through `dialog`.
 
 Runtime dependencies:
 
 - `svxlink-server`
 - `libasound2`
+- `libgpiod3`
 - `python3`
 - `systemd`
 - Linux SPI and ALSA loopback support
@@ -130,16 +130,9 @@ CAPTURE_DEV=hw:GenericStereoAu,1,0
 If ALSA assigns a different card name or index, override these values in
 `/etc/default/sx1255-repeater`.
 
-Step 4: install `libgpiod3` before installing the repeater package.  The
-`sx1255-spi-fixed` helper uses libgpiod from the distribution repository:
-
-```sh
-sudo apt update
-sudo apt install libgpiod3
-```
-
-Step 5: install the repeater package only after the kernel, overlay, and
-`libgpiod3` are active:
+Step 4: install the repeater package only after the kernel and overlay are
+active.  The `libgpiod3` runtime library is pulled automatically as a package
+dependency:
 
 ```sh
 sudo apt install ./sx1255-fm-repeater_0.1.0_arm64.deb
