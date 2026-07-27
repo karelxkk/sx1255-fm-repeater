@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <time.h>
@@ -78,6 +79,7 @@ static float TX_PREEMPH_TAU;
 
 static const char* HOST;
 static int PORT;
+static int LOG_LEVEL;
 
 // -------- State --------
 typedef enum { MODE_IDLE=0, MODE_RX=1, MODE_TX=2, MODE_DUP=3 } radio_mode_t;
@@ -96,6 +98,28 @@ static atomic_int rx_alive = 0;
 static int tx_thread_started = 0;
 static int rx_thread_started = 0;
 static int srv_fd = -1;
+
+enum { LOG_ERROR=0, LOG_WARN=1, LOG_INFO=2, LOG_DEBUG=3 };
+
+static int parse_log_level(const char *s)
+{
+    if(!s || !*s) return LOG_INFO;
+    if(strcasecmp(s, "error") == 0) return LOG_ERROR;
+    if(strcasecmp(s, "warn") == 0 || strcasecmp(s, "warning") == 0) return LOG_WARN;
+    if(strcasecmp(s, "info") == 0) return LOG_INFO;
+    if(strcasecmp(s, "debug") == 0) return LOG_DEBUG;
+    return atoi(s);
+}
+
+static void log_msg(int level, const char *fmt, ...)
+{
+    if(level > LOG_LEVEL) return;
+
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+}
 
 // -------- DSP primitives --------
 #define RX_IF_DECIM 5
@@ -641,7 +665,7 @@ static void* tx_worker(void* _)
     double dbg_sum_sq = 0.0;
     int dbg_peak = 0;
     uint64_t dbg_clipped = 0;
-    fprintf(stderr,
+    log_msg(LOG_INFO,
             "TX worker started: audio=%s format=S16_LE channels=1 rate=%d "
             "period=%d rf_rate=%d rf_channels=%d gain=%.3f\n",
             AUDIO_IN_DEV, TX_AUDIO_SR, audio_block, RF_SR, RF_CH, TX_GAIN);
@@ -653,7 +677,7 @@ static void* tx_worker(void* _)
         if(got == -EIO){
             source_retries++;
             if(source_retries == 1 || source_retries % 10 == 0){
-                fprintf(stderr,
+                log_msg(LOG_DEBUG,
                         "TX audio source not ready (EIO), reopening capture"
                         " [retry=%u]\n",
                         source_retries);
@@ -671,7 +695,7 @@ static void* tx_worker(void* _)
             pthread_mutex_unlock(&io_lock);
 
             if(rc < 0){
-                fprintf(stderr, "TX audio capture reopen failed: %s\n",
+                log_msg(LOG_DEBUG, "TX audio capture reopen failed: %s\n",
                         snd_strerror(rc));
             }
             msleep(0.100);
@@ -704,7 +728,7 @@ static void* tx_worker(void* _)
             double peak_dbfs = dbg_peak > 0
                 ? 20.0 * log10((double)dbg_peak / 32768.0)
                 : -INFINITY;
-            fprintf(stderr,
+            log_msg(LOG_DEBUG,
                     "TX AUDIO: samples=%llu peak=%d (%.1f dBFS) "
                     "rms=%.6f (%.1f dBFS) clipped=%llu\n",
                     (unsigned long long)dbg_samples, dbg_peak, peak_dbfs,
@@ -1092,6 +1116,7 @@ static void print_help(const char *prog)
         "\n"
         "Startup:\n"
         "  START=RX|TX|DUP|STOP        Initial mode, default RX. STOP only starts the TCP control server.\n"
+        "  LOG_LEVEL=info              error|warn|info|debug or 0..3, default info.\n"
         "  SECRET=mytoken              TCP control shared secret, default mytoken.\n"
         "  HOST=0.0.0.0                TCP control listen address, default 0.0.0.0.\n"
         "  PORT=17020                  TCP control listen port, default 17020.\n"
@@ -1155,6 +1180,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
+    LOG_LEVEL = parse_log_level(EV("LOG_LEVEL", "info"));
     SECRET = EV("SECRET", "mytoken");
     SPI_DEV = EV("SPI_DEV", "/dev/spidev0.0");
     SPI_SPEED_HZ = (uint32_t)EV_I("SPI_SPEED_HZ", 1000000);
