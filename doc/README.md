@@ -11,9 +11,10 @@ Install the hardware support first, then the repeater package:
 1. Install the Raspberry Pi Zero 2 kernel package:
    `rpi-zero2-kernel-6.18.36-myzero2+.deb`
 2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
-3. Reboot and verify that ALSA sees the `GenericStereoAu` audio device.
-4. Install `sx1255-fm-repeater_0.1.5_arm64.deb`.
-5. Configure SvxLink/repeater values when the package asks through `dialog`.
+3. Reboot.
+4. After the reboot, verify that ALSA sees the `GenericStereoAu` audio device.
+5. Install `sx1255-fm-repeater_0.1.5_arm64.deb`.
+6. Configure SvxLink/repeater values when the package asks through `dialog`.
 
 Runtime dependencies:
 
@@ -116,10 +117,16 @@ dtoverlay=genericstereoaudiocodec
 On older Raspberry Pi OS images the config file may be `/boot/config.txt`
 instead of `/boot/firmware/config.txt`.
 
-Step 3: reboot and verify that ALSA sees the SX1255 audio device:
+Step 3: reboot:
 
 ```sh
 sudo reboot
+```
+
+Step 4: after the system starts again, verify that ALSA sees the SX1255 audio
+device:
+
+```sh
 aplay -l
 arecord -l
 ```
@@ -160,7 +167,7 @@ After reconnecting Wi-Fi, verify:
 iw dev wlan0 get power_save
 ```
 
-Step 4: install the repeater package only after the kernel and overlay are
+Step 5: install the repeater package only after the kernel and overlay are
 active.  The `libgpiod3` runtime library is pulled automatically as a package
 dependency:
 
