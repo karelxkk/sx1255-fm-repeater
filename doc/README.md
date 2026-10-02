@@ -92,13 +92,13 @@ sudo dpkg-reconfigure sx1255-fm-repeater
 
 The release provides these support files for Raspberry Pi Zero 2:
 
-- `rpi-zero2-kernel-6.18.36-myzero2+.deb`
+- `rpi-zero2-kernel-6.18.54-myzero2+.deb`
 - `genericstereoaudiocodec.dtbo`
 
 Step 1: install the kernel package first:
 
 ```sh
-sudo apt install ./rpi-zero2-kernel-6.18.36-myzero2+.deb
+sudo apt install ./rpi-zero2-kernel-6.18.54-myzero2+.deb
 ```
 
 Step 2: install the device-tree overlay:
