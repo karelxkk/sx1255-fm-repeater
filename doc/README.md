@@ -13,7 +13,7 @@ Install the hardware support first, then the repeater package:
 2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
 3. Reboot.
 4. After the reboot, verify that ALSA sees the `GenericStereoAu` audio device.
-5. Install `sx1255-fm-repeater_0.1.5_arm64.deb`.
+5. Install `sx1255-fm-repeater_0.2.0_arm64.deb`.
 6. Configure SvxLink/repeater values when the package asks through `dialog`.
 
 Runtime dependencies:
@@ -22,6 +22,7 @@ Runtime dependencies:
 - `libasound2`
 - `libgpiod3`
 - `python3`
+- `python3-gpiod` (required for the optional external PA PTT output)
 - `systemd`
 - Linux SPI and ALSA loopback support
 - Raspberry Pi kernel with the SX1255 I2S audio overlay
@@ -172,7 +173,7 @@ active.  The `libgpiod3` runtime library is pulled automatically as a package
 dependency:
 
 ```sh
-sudo apt install ./sx1255-fm-repeater_0.1.5_arm64.deb
+sudo apt install ./sx1255-fm-repeater_0.2.0_arm64.deb
 ```
 
 Enable the repeater, PTT bridge, and SvxLink services:
@@ -182,6 +183,52 @@ sudo systemctl enable --now sx1255-repeater.service
 sudo systemctl enable --now svx-ptt-bridge.service
 sudo systemctl enable --now svxlink
 ```
+
+## External Power Amplifier (PA PTT)
+
+The PTT bridge can key an external power amplifier through a spare GPIO line
+in addition to switching the SX1255 between RX and DUP.  The feature is
+disabled by default and has no effect unless `PA_PTT_ENABLED=1`.
+
+### Pin selection
+
+- Recommended pin: **GPIO17** (physical pin 11).
+- Do **not** use: GPIO22 (SX1255 reset), GPIO18-21 (I2S audio), GPIO8-11
+  (SPI0), GPIO14/15 (UART console).
+- Verify availability on your hardware with `gpioinfo` or `raspi-gpio get`.
+
+### Configuration
+
+Set the following environment variables in
+`/etc/systemd/system/svx-ptt-bridge.service` (or the unit template
+`systemd/svx-ptt-bridge.service.in`):
+
+| Variable              | Meaning                                                  |
+|-----------------------|----------------------------------------------------------|
+| `PA_PTT_ENABLED`      | `1` enables PA PTT, `0` disables it (default)            |
+| `PA_PTT_CHIP`         | GPIO chip, usually `/dev/gpiochip0`                      |
+| `PA_PTT_LINE`         | BCM GPIO number to use                                   |
+| `PA_PTT_ACTIVE_LEVEL` | `1` = active high, `0` = active low                      |
+| `PA_PTT_PRE_MS`       | delay after keying the PA before TX, in milliseconds     |
+| `PA_PTT_POST_MS`      | delay after returning to RX before unkeying the PA, in ms |
+
+The bridge keys the PA *before* switching the radio to TX and unkeys it
+*after* switching back to RX, which protects the amplifier from hot
+switching.  If switching to TX fails, the PA is unkeyed immediately.
+
+After changing the unit file, reload and restart:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl restart svx-ptt-bridge.service
+journalctl -u svx-ptt-bridge -f
+```
+
+### Electrical wiring
+
+Always drive the PA key line through a transistor or optocoupler.  Do not
+connect a relay coil directly to a GPIO pin; the pin cannot supply the
+required current and the back-EMF can damage the SoC.
 
 ## SX1255 Frequencies
 

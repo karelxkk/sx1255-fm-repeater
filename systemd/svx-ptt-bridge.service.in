@@ -15,6 +15,12 @@ Environment="SVX_PTY=/run/svxlink/ptt"
 Environment="SX_HOST=127.0.0.1"
 Environment="SX_PORT=17020"
 Environment="SX_SECRET=mytoken"
+Environment="PA_PTT_ENABLED=0"
+Environment="PA_PTT_CHIP=/dev/gpiochip0"
+Environment="PA_PTT_LINE=17"
+Environment="PA_PTT_ACTIVE_LEVEL=1"
+Environment="PA_PTT_PRE_MS=10"
+Environment="PA_PTT_POST_MS=10"
 ExecStart=@PYTHON@ @BINDIR@/svx_sx1255_ptt_bridge.py
 Restart=always
 RestartSec=0.5
