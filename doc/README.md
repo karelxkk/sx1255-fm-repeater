@@ -9,7 +9,7 @@ This directory is intended to be a standalone git repository.
 Install the hardware support first, then the repeater package:
 
 1. Install the Raspberry Pi Zero 2 kernel package:
-   `rpi-zero2-kernel-6.18.36-myzero2+.deb`
+   `rpi-zero2-kernel-6.18.54-myzero2+.deb`
 2. Install and enable the `genericstereoaudiocodec` device-tree overlay.
 3. Reboot.
 4. After the reboot, verify that ALSA sees the `GenericStereoAu` audio device.
